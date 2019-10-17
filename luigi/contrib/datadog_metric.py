@@ -16,6 +16,8 @@ class datadog(Config):
     api_key = parameter.Parameter(default='dummy_api_key', description='API key provided by Datadog')
     app_key = parameter.Parameter(default='dummy_app_key', description='APP key provided by Datadog')
     default_tags = parameter.Parameter(default='application:luigi', description='Default tags for every events and metrics sent to Datadog')
+    notifications = parameter.Parameter(default='', description=('Space separated list of @ notifications to be added to the event text. '
+                                                                 'See https://docs.datadoghq.com/graphing/event_stream/#notifications'))
     environment = parameter.Parameter(default='development', description="Environment of which the pipeline is ran from (eg: 'production', 'staging', ...")
     metric_namespace = parameter.Parameter(default='luigi', description="Default namespace for events and metrics (eg: 'luigi' for 'luigi.task.started')")
     statsd_host = parameter.Parameter(default='localhost', description='StatsD host implementing the Datadog service')
@@ -90,6 +92,8 @@ class DatadogMetricsCollector(MetricsCollector):
 
     def _send_event(self, **params):
         params['tags'] += self.default_tags
+        if self._config.notifications:
+            params['text'] += '\n' + self._config.notifications
 
         api.Event.create(**params)
 

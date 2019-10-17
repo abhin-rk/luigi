@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from helpers import unittest
+from helpers import unittest, with_config
 import mock
 import time
 
@@ -66,6 +66,15 @@ class DatadogMetricTest(unittest.TestCase):
                                                        'application:luigi'],
                                                  text='A task has been started in the pipeline named: DDTaskName',
                                                  title='Luigi: A task has been started!')
+
+    @with_config({'datadog': {'notifications': '@test-notification @another-test-notification'}})
+    def test_send_event_with_notification(self):
+        task = self.startTask()
+        DatadogMetricsCollector().handle_task_started(task)
+
+        self.assertEqual(self.mock_create.call_count, 1)
+        self.assertIn('@test-notification @another-test-notification',
+                      self.mock_create.call_args[1]['text'])
 
     def test_send_increment_on_task_started(self):
         task = self.startTask()
